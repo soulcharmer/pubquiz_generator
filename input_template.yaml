@@ -1,0 +1,10 @@
+
+# <h2>-name of the quiz-</h2>
+title: title of the quiz
+
+# <img data-src="multimedia/quiz.png" /> ; welcome image
+splash: quiz
+
+# rule slides (between the first slide and the questions) can be boilerplate
+
+
