@@ -7,4 +7,53 @@ splash: quiz
 
 # rule slides (between the first slide and the questions) can be boilerplate
 
+# <p>round 1 / topic 1</p> ; round header slide
+#  <img data-src="multimedia/1-1.png" alt="add image" /> should be recognized and generated automatically
+
+round_1-1: Topic title goes here
+
+# all Reveal.js formatting should be accepted here
+
+1-1_q1: |
+        Question number 1 goes here
+        potentially multi-line
+
+1-1_a1: | 
+        Answer 1 goes here
+        potentially multi-line
+
+
+# same as above for the rest of the round questions
+
+round_1-2: Topic title no.2 goes here
+
+1-2_q1: |
+        Question number 1 goes here
+        potentially multi-line
+
+1-2_a1: | 
+        Answer 1 goes here
+        potentially multi-line
+
+# same as above for the rest of the round questions
+
+# optional bonus question slide:
+
+1-2_bq: |
+        Bonus question
+        possibly multi-line
+        should have multimedia auto-discovery
+
+1-2_ba: |
+        Bonus question answer
+        possibly multi-line
+        should have multimedia auto-discovery
+
+
+#  <video data-autoplay src="multimedia/1_min_timer.mp4"></video>  ; probably boilerplate
+
+# Break slide: <img data-src="multimedia/break1.png" alt="add image" />
+# boilerplate:  <a href="#/2">results for round 1</a>
+
+# rince and repeat for all other rounds ... :)
 
