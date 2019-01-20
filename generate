@@ -1,0 +1,119 @@
+#!/usr/bin/python
+
+"""
+Transforms pubquiz yaml input into Reveal.js output
+"""
+
+import argparse
+import logging
+import sys
+import yaml
+
+round_text_template = """
+    <section data-transition="slide" data-background="#FFFFFF" data-background-transition="zoom">
+        <p>round #ROUND_NUMBER# / topic #TOPIC_NUMBER# </p>
+        <h2>#TOPIC# </h2>
+        <img data-src="multimedia/#ROUND_NUMBER#-#TOPIC_NUMBER#.png" alt="add image" />
+    </section>
+                """
+def debug(msg):
+    """
+    shorthand for debug logging, detailed, not visible by default
+    """
+    logging.debug(msg)
+
+def log(msg):
+    """
+    shorthand for info logging, basic level of logs, visible by default
+    """
+    logging.info(msg)
+
+def error(msg):
+    """
+    shorthand for error logging
+    irrecoverable, so exit follows
+    """
+    logging.error(msg)
+    sys.exit(1)
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--template","-t", required='True',
+        help="Path to a output template file")
+parser.add_argument("--input","-i", required="True",
+        help="Input yaml file with pubquiz definition")
+parser.add_argument("--debug","-d", default=False, action='store_true',
+        help="turn on very verbose logging")
+options = parser.parse_args()
+
+# setup logging
+log_level = logging.INFO
+if options.debug:
+    log_level = logging.DEBUG
+logging.basicConfig(level=log_level, format = "[%(levelname)s] %(message)s")
+
+# setup output (read template)
+# we treat it like a text file (not HTML) and simply replace
+# tokens #TOKEN# for their values from the input Yaml file
+log("Reading output HTML template")
+output_file = open(options.template,'r')
+output = output_file.read()
+output_file.close()
+
+# read input
+log("Parsing Yaml input")
+input_raw = open(options.input,'r')
+try:
+    quiz = (yaml.load(input_raw))
+    for item in quiz:
+        debug("{0}:{1}".format(item,quiz[item]))
+except yaml.YAMLError as exc:
+    error("Failed to parse input:{0}".format(exc))
+
+# input format ignores Yaml's ability to represent a tree structure,
+# containing everything in a single flat list and then simulates
+# the tree structure in item names...
+
+# static one-off tags
+for tag in ['title', 'splash']:
+    if tag in quiz:
+        output_tag = "#{0}#".format(tag.upper())
+        log("Generating: {0}".format(tag))
+        if output_tag not in output:
+            error("Required tag {0} not found in output template".format(
+                output_tag))
+        output = output.replace(output_tag, quiz[tag])
+    else:
+        error("Missing quiz {0}".format(tag))
+
+# rounds & topics & questions
+for round_tag in [ x for x in quiz if 'round' in x ]:
+    round_number = round_tag.split('_')[1].split('-')[0]
+    topic_number = round_tag.split('_')[1].split('-')[1]
+    try:
+        int(round_number)
+    except ValueError as e:
+        error("Failed to parse round number from '{0}'".format(round_tag))
+    try:
+        int(topic_number)
+    except ValueError as e:
+        error("Failed to parse topic number from '{0}'".format(round_tag))
+    log("Generating: round {0} topic {1}".format(round_number, topic_number))
+    # prepare finished HTML snippet from template
+    round_text = round_text_template.replace('#ROUND_NUMBER#', round_number)
+    round_text = round_text.replace('#TOPIC_NUMBER#', topic_number)
+    round_text = round_text.replace('#TOPIC#', quiz[round_tag])
+    debug(round_text)
+    # put the snippet into output
+    rounds_index = output.find('#ROUNDS#')
+    if rounds_index == -1:
+        error("Output template is missing the #ROUNDS# tag")
+    else:
+        output = output[0:rounds_index] + round_text + \
+        '#ROUNDS#' + output[rounds_index + 8:]
+# remove the #ROUNDS# tag - it's no longer needed and would
+# be visible in the final output
+output = output.replace('#ROUNDS#','')
+
+# write the final output
+print(output)
+

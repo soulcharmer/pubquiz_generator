@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>PubQuiz Reveal.js template</title>
+        <!-- <meta name="description" content="A framework for easily creating beautiful presentations using HTML">
+        <meta name="author" content="Hakim El Hattab"> -->
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+        <link rel="stylesheet" href="css/reveal.css">
+        <link rel="stylesheet" href="css/theme/beige.css" id="theme">
+
+        <!-- Theme used for syntax highlighting of code -->
+        <link rel="stylesheet" href="lib/css/zenburn.css">
+
+        <!-- Printing and PDF exports -->
+        <script>
+            var link = document.createElement( 'link' );
+            link.rel = 'stylesheet';
+            link.type = 'text/css';
+            link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+            document.getElementsByTagName( 'head' )[0].appendChild( link );
+        </script>
+
+        <!--[if lt IE 9]>
+        <script src="lib/js/html5shiv.js"></script>
+        <![endif]-->
+    </head>
+
+    <body>
+    <div class="reveal">
+    <div class="slides">
+        <section>
+            <h2>#TITLE#</h2>
+            <img data-src="multimedia/#SPLASH#.png" />
+        </section>
+        <section>
+            <section>
+                <h2>The Rules</h2>
+                    <ol>
+                        <li>Have fun</li>
+                        <li>Learn something new</li>
+                        <li>Score points and win prices</li>
+                    </ol>
+            </section>
+            <section>
+                <h2>The Rules</h2>
+                <ul>
+                    <li>no electronic devices, or other external sources of<br>
+                    information are allowed to look up answers during quiz rounds
+                    <li>voluntary charity contributions are possible
+                    <li>the quizmasters bear the responsibility to arbitrate
+                    <li>full answer = 2 points, partial/bonus answer = 1 point (unless stated otherwise)
+                    <li>after each round, you have one minute to hand in your score sheet
+                    <li>hints are in the details, please pay attention
+                    <li>if you don't know the correct answer, write something funny :-)
+                </ul>
+            </section>
+        </section>
+        #ROUNDS#
+        <section  data-transition="slide" data-background="#ffffff" data-background-transition="zoom">
+            <h1>THANK YOU</h1>
+            <img src="multimedia/thankyou.jpg" alt="http://www.bobkatsjaunt.com/wife-carry.html" />
+            <p><a href="https://github.com/soulcharmer/pubquiz_template">https://github.com/soulcharmer/pubquiz_template</a></p>
+        </section>
+    </div>
+</div>
+        <script src="lib/js/head.min.js"></script>
+        <script src="js/reveal.js"></script>
+
+        <script>
+            // More info https://github.com/hakimel/reveal.js#configuration
+            Reveal.initialize({
+                controls: true,
+                progress: true,
+                history: true,
+                center: true,
+
+        // Override scale defaults, see https://github.com/hakimel/reveal.js/#presentation-size 
+        width: "65%",
+          height: "100%",
+          margin: 0,
+          minScale: 1,
+          maxScale: 1,
+
+                transition: 'convex', // none/fade/slide/convex/concave/zoom
+
+                // More info https://github.com/hakimel/reveal.js#dependencies
+                dependencies: [
+                    { src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+                    { src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+                    { src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+                    { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+                    { src: 'plugin/zoom-js/zoom.js', async: true },
+                    { src: 'plugin/notes/notes.js', async: true }
+                ]
+            });
+
+        </script>
+    </body>
+</html>
