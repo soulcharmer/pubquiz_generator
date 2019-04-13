@@ -80,7 +80,7 @@ def error(msg):
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--template","-t", required='True',
-        help="Path to a output template file")
+        help="Path to an output template file")
 parser.add_argument("--input","-i", required="True",
         help="Input yaml file with pubquiz definition")
 parser.add_argument("--debug","-d", default=False, action='store_true',
@@ -128,7 +128,20 @@ for tag in ['title', 'splash']:
         error("Missing quiz {0}".format(tag))
 
 # rounds & topics & questions
-for round_tag in [ x for x in quiz if 'round' in x ]:
+
+# custom sorting functions for numerically sorting string tags
+# e.g. 1-1_q1 < 1-1_q2 < 1-1_q10
+def round_sorter(round_tag):
+    round_number = int(round_tag.split('_')[1].split('-')[0])
+    topic_number = int(round_tag.split('_')[1].split('-')[1])
+    return round_number * 10000 + topic_number
+
+def question_sorter(value):
+    question_number = int(value.split('_')[1][1:])
+    log(question_number)
+    return question_number
+
+for round_tag in sorted([ x for x in quiz if 'round' in x ], key = round_sorter):
     round_number = round_tag.split('_')[1].split('-')[0]
     topic_number = round_tag.split('_')[1].split('-')[1]
     try:
@@ -151,7 +164,9 @@ for round_tag in [ x for x in quiz if 'round' in x ]:
     '#ROUNDS#' + output[rounds_index + 8:]
 
     # add questions to the round/topic
-    for question in sorted([ x for x in quiz if "{0}-{1}_q".format(round_number, topic_number) in x]):
+    for question in sorted(
+            [ x for x in quiz if "{0}-{1}_q".format(round_number, topic_number) in x],
+            key = question_sorter):
         answer = question.replace('q', 'a')
         log("Generating: question {0}".format(question))
         # prepare finished Q/A HTML snippet from template
