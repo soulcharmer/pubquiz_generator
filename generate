@@ -83,6 +83,8 @@ parser.add_argument("--template","-t", required='True',
         help="Path to an output template file")
 parser.add_argument("--input","-i", required="True",
         help="Input yaml file with pubquiz definition")
+parser.add_argument("--output","-o",
+        help="Output file instead of stdout")
 parser.add_argument("--debug","-d", default=False, action='store_true',
         help="turn on very verbose logging")
 options = parser.parse_args()
@@ -198,5 +200,8 @@ for round_tag in sorted([ x for x in quiz if 'round' in x ], key = round_sorter)
 output = output.replace('#ROUNDS#','')
 
 # write the final output
-print(output)
-
+if options.output:
+    with open(options.output, "w") as out_file:
+        out_file.write(output)
+else:
+    print(output)
