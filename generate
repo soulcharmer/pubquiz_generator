@@ -1,0 +1,207 @@
+#!/usr/bin/python
+
+"""
+Transforms pubquiz yaml input into Reveal.js output
+"""
+
+import argparse
+import logging
+import sys
+import yaml
+
+round_text_template = """
+<section data-transition="slide" data-background="#FFFFFF" data-background-transition="zoom">
+    <p>round #ROUND_NUMBER# / topic #TOPIC_NUMBER# </p>
+    <h2>#TOPIC# </h2>
+    <img data-src="multimedia/#ROUND_NUMBER#-#TOPIC_NUMBER#.png" alt="add image" />
+</section>
+                """
+question_text_template = """
+<section>
+    <section>
+        <p>
+        #QUESTION#
+        </p>
+    </section>
+    <section>
+        <small>
+            #QUESTION#
+        </small>
+        <p class="fragment fade-up">
+        <strong>
+            #ANSWER#
+        </strong>
+        </p>
+    </section>
+</section>
+"""
+bonus_question_text_template = """
+<section>
+    <section>
+        <h2>BONUS QUESTION</h2>
+        <p>
+            #QUESTION#
+        </p>
+    </section>
+    <section>
+        <video data-autoplay src="multimedia/1_min_timer.mp4"></video>
+    </section>
+    <section>
+        <small>
+            #QUESTION#
+        </small>
+        <p class="fragment fade-up">
+        <strong>
+        #ANSWER#
+        </strong>
+        </p>
+    </section>
+</section>
+"""
+def debug(msg):
+    """
+    shorthand for debug logging, detailed, not visible by default
+    """
+    logging.debug(msg)
+
+def log(msg):
+    """
+    shorthand for info logging, basic level of logs, visible by default
+    """
+    logging.info(msg)
+
+def error(msg):
+    """
+    shorthand for error logging
+    irrecoverable, so exit follows
+    """
+    logging.error(msg)
+    sys.exit(1)
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--template","-t", required='True',
+        help="Path to an output template file")
+parser.add_argument("--input","-i", required="True",
+        help="Input yaml file with pubquiz definition")
+parser.add_argument("--output","-o",
+        help="Output file instead of stdout")
+parser.add_argument("--debug","-d", default=False, action='store_true',
+        help="turn on very verbose logging")
+options = parser.parse_args()
+
+# setup logging
+log_level = logging.INFO
+if options.debug:
+    log_level = logging.DEBUG
+logging.basicConfig(level=log_level, format = "[%(levelname)s] %(message)s")
+
+# setup output (read template)
+# we treat it like a text file (not HTML) and simply replace
+# tokens #TOKEN# for their values from the input Yaml file
+log("Reading output HTML template")
+output_file = open(options.template,'r')
+output = output_file.read()
+output_file.close()
+
+# read input
+log("Parsing Yaml input")
+input_raw = open(options.input,'r')
+try:
+    quiz = (yaml.load(input_raw))
+    for item in quiz:
+        debug("input: {0}:{1}".format(item,quiz[item]))
+except yaml.YAMLError as exc:
+    error("Failed to parse input:{0}".format(exc))
+
+# input format ignores Yaml's ability to represent a tree structure,
+# containing everything in a single flat list and then simulates
+# the tree structure in item names...
+
+# static one-off tags
+for tag in ['title', 'splash']:
+    if tag in quiz:
+        output_tag = "#{0}#".format(tag.upper())
+        log("Generating: {0}".format(tag))
+        if output_tag not in output:
+            error("Required tag {0} not found in output template".format(
+                output_tag))
+        output = output.replace(output_tag, quiz[tag])
+    else:
+        error("Missing quiz {0}".format(tag))
+
+# rounds & topics & questions
+
+# custom sorting functions for numerically sorting string tags
+# e.g. 1-1_q1 < 1-1_q2 < 1-1_q10
+def round_sorter(round_tag):
+    round_number = int(round_tag.split('_')[1].split('-')[0])
+    topic_number = int(round_tag.split('_')[1].split('-')[1])
+    return round_number * 10000 + topic_number
+
+def question_sorter(value):
+    question_number = int(value.split('_')[1][1:])
+    log(question_number)
+    return question_number
+
+for round_tag in sorted([ x for x in quiz if 'round' in x ], key = round_sorter):
+    round_number = round_tag.split('_')[1].split('-')[0]
+    topic_number = round_tag.split('_')[1].split('-')[1]
+    try:
+        int(round_number)
+    except ValueError as e:
+        error("Failed to parse round number from '{0}'".format(round_tag))
+    try:
+        int(topic_number)
+    except ValueError as e:
+        error("Failed to parse topic number from '{0}'".format(round_tag))
+    log("Generating: round {0} topic {1}".format(round_number, topic_number))
+    # prepare finished round/topic HTML snippet from template
+    round_text = round_text_template.replace('#ROUND_NUMBER#', round_number)
+    round_text = round_text.replace('#TOPIC_NUMBER#', topic_number)
+    round_text = round_text.replace('#TOPIC#', quiz[round_tag])
+    debug(round_text)
+    # put the round/topic snippet into output
+    rounds_index = output.find('#ROUNDS#')
+    output = output[0:rounds_index] + round_text + \
+    '#ROUNDS#' + output[rounds_index + 8:]
+
+    # add questions to the round/topic
+    for question in sorted(
+            [ x for x in quiz if "{0}-{1}_q".format(round_number, topic_number) in x],
+            key = question_sorter):
+        answer = question.replace('q', 'a')
+        log("Generating: question {0}".format(question))
+        # prepare finished Q/A HTML snippet from template
+        question_text = question_text_template.replace('#QUESTION#', quiz[question])
+        question_text = question_text.replace('#ANSWER#', quiz[answer])
+        debug(question_text)
+        # put the Q/A snippet into output
+        rounds_index = output.find('#ROUNDS#')
+        output = output[0:rounds_index] + question_text + \
+        '#ROUNDS#' + output[rounds_index + 8:]
+
+    # finally check for bonus question
+    bonus_question = "{0}-{1}_bq".format(round_number, topic_number)
+    if bonus_question in quiz:
+        log("Generating: bonus question {0}".format(bonus_question))
+        bonus_answer = bonus_question.replace('q', 'a')
+        # prepare finished bonus question HTML snippet from template
+        bonus_question_text = bonus_question_text_template.replace('#QUESTION#', quiz[bonus_question])
+        bonus_question_text = bonus_question_text.replace('#ANSWER#', quiz[bonus_answer])
+        debug(bonus_question_text)
+        # put the bonus Q/A snippet into output
+        rounds_index = output.find('#ROUNDS#')
+        output = output[0:rounds_index] + bonus_question_text + \
+        '#ROUNDS#' + output[rounds_index + 8:]
+    else:
+        log("No bonus question in {0}".format(round_tag))
+# remove the #ROUNDS# tag - it's no longer needed and would
+# be visible in the final output
+output = output.replace('#ROUNDS#','')
+
+# write the final output
+if options.output:
+    with open(options.output, "w") as out_file:
+        out_file.write(output)
+else:
+    print(output)
