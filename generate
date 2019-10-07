@@ -21,6 +21,11 @@ question_text_template = """
     <section>
         <p>
         #QUESTION#
+        <small>
+            <span style="background-color: rgba(0, 0, 0, 0.9); color: #fff; padding: 5px; position: absolute; top: 0px; left: 50px;">
+                round #ROUND_NUMBER# / question #QUESTION_NUMBER#
+            </span>
+        </small>
         </p>
     </section>
     <section>
@@ -31,6 +36,11 @@ question_text_template = """
         <strong>
             #ANSWER#
         </strong>
+        <small>
+            <span style="background-color: rgba(0, 0, 0, 0.9); color: #fff; padding: 5px; position: absolute; top: 0px; left: 50px;">
+                round 1 / question 1
+            </span>
+        </small>
         </p>
     </section>
 </section>
@@ -140,8 +150,9 @@ def round_sorter(round_tag):
 
 def question_sorter(value):
     question_number = int(value.split('_')[1][1:])
-    log(question_number)
     return question_number
+# another convenient name for the same functionality
+question_number = question_sorter
 
 for round_tag in sorted([ x for x in quiz if 'round' in x ], key = round_sorter):
     round_number = round_tag.split('_')[1].split('-')[0]
@@ -174,6 +185,8 @@ for round_tag in sorted([ x for x in quiz if 'round' in x ], key = round_sorter)
         # prepare finished Q/A HTML snippet from template
         question_text = question_text_template.replace('#QUESTION#', quiz[question])
         question_text = question_text.replace('#ANSWER#', quiz[answer])
+        question_text = question_text.replace('#ROUND_NUMBER#', round_number)
+        question_text = question_text.replace('#QUESTION_NUMBER#', str(question_number(question)))
         debug(question_text)
         # put the Q/A snippet into output
         rounds_index = output.find('#ROUNDS#')
